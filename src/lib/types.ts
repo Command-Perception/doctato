@@ -9,17 +9,22 @@ export interface CrawledFile {
     name: string;
     description: string;
     files: number[]; // Indices referencing the files array
+    file_indices?: Array<number | string>; // Temporary field from LLM that gets processed
   }
   
   export interface Relationship {
     from: number; // Index of source abstraction
     to: number; // Index of target abstraction
     label: string;
+    // Temporary fields that might be returned by the LLM
+    from_abstraction?: number | string;
+    to_abstraction?: number | string;
   }
   
   export interface RelationshipData {
     summary: string;
     details: Relationship[];
+    relationships?: Relationship[]; // For backward compatibility
   }
   
   export interface ChapterInfo {

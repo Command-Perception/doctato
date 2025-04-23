@@ -84,30 +84,54 @@ export async function POST(request: NextRequest) {
 
     try {
         // Handle multipart/form-data for file uploads
-        const formData = await request.formData();
+        let formData;
+        try {
+            formData = await request.formData();
+        } catch (error) {
+            console.error("Error getting form data:", error);
+            return NextResponse.json({ 
+                success: false, 
+                error: "Failed to parse form data" 
+            }, { status: 400 });
+        }
+        
+        if (!formData) {
+            return NextResponse.json({ 
+                success: false, 
+                error: "Form data is empty or undefined" 
+            }, { status: 400 });
+        }
+        
         const data: Record<string, any> = {};
         let uploadedFile: File | undefined = undefined;
 
-        formData.forEach((value, key) => {
-            if (key === 'uploadedFile' && value instanceof File && value.size > 0) {
-                uploadedFile = value;
-                data[key] = value; // Keep file object
-                 console.log(`Received file: ${value.name}, size: ${value.size}`);
-            } else if (key === 'includePatterns' || key === 'excludePatterns') {
-                 // Assume comma-separated strings from basic textarea
-                 data[key] = typeof value === 'string' && value.trim() ? value.split(',').map(s => s.trim()).filter(Boolean) : [];
-            } else if (key === 'maxFileSize') {
-                 data[key] = typeof value === 'string' ? parseInt(value, 10) : undefined;
-            } else if (typeof value === 'string') {
-                 data[key] = value;
+        try {
+            // Use a safer approach to iterate through form data
+            const entries = Array.from(formData.entries());
+            for (const [key, value] of entries) {
+                if (key === 'uploadedFile' && value instanceof File && value.size > 0) {
+                    uploadedFile = value;
+                    data[key] = value; // Keep file object
+                    console.log(`Received file: ${value.name}, size: ${value.size}`);
+                } else if (key === 'includePatterns' || key === 'excludePatterns') {
+                    // Assume comma-separated strings from basic textarea
+                    data[key] = typeof value === 'string' && value.trim() ? value.split(',').map(s => s.trim()).filter(Boolean) : [];
+                } else if (key === 'maxFileSize') {
+                    data[key] = typeof value === 'string' ? parseInt(value, 10) : undefined;
+                } else if (typeof value === 'string') {
+                    data[key] = value;
+                }
             }
-        });
+        } catch (error) {
+            console.error("Error processing form entries:", error);
+            return NextResponse.json({ success: false, error: "Failed to process form fields" }, { status: 400 });
+        }
 
-         // Basic type assertion after parsing form data
-         requestBody = data as unknown as GenerationInput;
-         if (uploadedFile) {
+        // Basic type assertion after parsing form data
+        requestBody = data as unknown as GenerationInput;
+        if (uploadedFile) {
             requestBody.uploadedFile = uploadedFile; // Ensure file object is set correctly
-         }
+        }
 
         console.log("Parsed request body:", { ...requestBody, uploadedFile: requestBody.uploadedFile ? { name: requestBody.uploadedFile.name, size: requestBody.uploadedFile.size, type: requestBody.uploadedFile.type } : undefined });
 
@@ -221,19 +245,39 @@ export async function POST(request: NextRequest) {
              () => getAnalyzeRelationshipsPrompt(projectName, abstractionInfoForPrompt.join('\n'), relationshipContext, language),
              (text) => YAML.parse(text) as RelationshipData,
              (parsed) => {
-                 if (!parsed || typeof parsed !== 'object' || typeof parsed.summary !== 'string' || !Array.isArray(parsed.relationships)) return "Invalid structure: Expected summary (string) and relationships (list).";
+                 // Basic structure validation
+                 if (!parsed || typeof parsed !== 'object' || typeof parsed.summary !== 'string') 
+                     return "Invalid structure: Expected summary (string)";
+                
+                 // Check for required relationships array
+                 if (!Array.isArray(parsed.relationships))
+                     return "Invalid structure: Expected relationships (list)";
+                
+                 // Ensure details is initialized properly
+                 if (!parsed.details || !Array.isArray(parsed.details)) {
+                     // Use relationships array as details
+                     parsed.details = parsed.relationships;
+                 }
+                
                  const mentionedIndices = new Set<number>();
-                 for (const rel of parsed.relationships) {
-                     if (!rel || typeof rel !== 'object' || rel.from_abstraction === undefined || rel.to_abstraction === undefined || typeof rel.label !== 'string') return `Invalid relationship item structure: ${JSON.stringify(rel).substring(0,100)}`;
+                 for (const rel of parsed.details) {
+                     if (!rel || typeof rel !== 'object' || rel.from_abstraction === undefined || rel.to_abstraction === undefined || typeof rel.label !== 'string') 
+                         return `Invalid relationship item structure: ${JSON.stringify(rel).substring(0,100)}`;
+                     
                      try {
                         const fromIdx = parseInt(String(rel.from_abstraction).split('#')[0].trim(), 10);
                         const toIdx = parseInt(String(rel.to_abstraction).split('#')[0].trim(), 10);
-                        if (isNaN(fromIdx) || isNaN(toIdx) || fromIdx < 0 || fromIdx >= abstractions.length || toIdx < 0 || toIdx >= abstractions.length) return `Invalid index in relationship: from=${rel.from_abstraction}, to=${rel.to_abstraction}`;
-                         rel.from = fromIdx; // Add parsed index
-                         rel.to = toIdx;     // Add parsed index
-                         mentionedIndices.add(fromIdx);
-                         mentionedIndices.add(toIdx);
-                     } catch { return `Could not parse indices from relationship: ${JSON.stringify(rel).substring(0,100)}`; }
+                        
+                        if (isNaN(fromIdx) || isNaN(toIdx) || fromIdx < 0 || fromIdx >= abstractions.length || toIdx < 0 || toIdx >= abstractions.length) 
+                            return `Invalid index in relationship: from=${rel.from_abstraction}, to=${rel.to_abstraction}`;
+                         
+                        rel.from = fromIdx; // Add parsed index
+                        rel.to = toIdx;     // Add parsed index
+                        mentionedIndices.add(fromIdx);
+                        mentionedIndices.add(toIdx);
+                     } catch { 
+                         return `Could not parse indices from relationship: ${JSON.stringify(rel).substring(0,100)}`; 
+                     }
                  }
                   // Check if all abstractions are mentioned
                  if (mentionedIndices.size !== abstractions.length) {
@@ -252,15 +296,35 @@ export async function POST(request: NextRequest) {
 
         // --- 4. Order Chapters ---
         console.log("Ordering chapters...");
-         let orderContext = `Project Summary:\n${relationships.summary}\n\n`;
-         orderContext += "Relationships (Indices refer to abstractions above):\n";
-         relationships.details.forEach(rel => {
-             const fromName = abstractions[rel.from]?.name || `Unknown(${rel.from})`;
-             const toName = abstractions[rel.to]?.name || `Unknown(${rel.to})`;
-             orderContext += `- From ${rel.from} (${fromName}) to ${rel.to} (${toName}): ${rel.label}\n`;
-         });
+        let orderContext = `Project Summary:\n${relationships.summary}\n\n`;
+        orderContext += "Relationships (Indices refer to abstractions above):\n";
+        
+        // Add safety check for relationships.details
+        if (!relationships.details) {
+            console.warn("No relationship details found - creating empty array");
+            relationships.details = [];
+        }
+        
+        // Also make sure relationships.details is an array
+        if (!Array.isArray(relationships.details)) {
+            console.warn("Relationship details is not an array - fixing");
+            relationships.details = relationships.relationships || [];
+        }
+        
+        if (relationships.details && Array.isArray(relationships.details) && relationships.details.length > 0) {
+            relationships.details.forEach(rel => {
+                if (rel && typeof rel === 'object' && 'from' in rel && 'to' in rel) {
+                    const fromName = abstractions[rel.from]?.name || `Unknown(${rel.from})`;
+                    const toName = abstractions[rel.to]?.name || `Unknown(${rel.to})`;
+                    orderContext += `- From ${rel.from} (${fromName}) to ${rel.to} (${toName}): ${rel.label || 'related'}\n`;
+                }
+            });
+        } else {
+            console.warn("No valid relationships to process");
+            orderContext += "- No detailed relationships defined.\n";
+        }
 
-         const orderResult = await callLlmWithRetry<Array<string | number>>(
+        const orderResult = await callLlmWithRetry<Array<string | number>>(
              () => getOrderChaptersPrompt(projectName, abstractionInfoForPrompt.join('\n'), orderContext, language),
              (text) => YAML.parse(text) as Array<string | number>,
              (parsed) => {
@@ -388,13 +452,21 @@ export async function POST(request: NextRequest) {
             const sanitizedName = (abstr.name || `Abstraction ${i}`).replace(/"/g, ''); // Sanitize
             mermaidLines.push(`    ${nodeId}["${sanitizedName}"]`); // Node label
         });
-        relationships.details.forEach(rel => {
-            const fromNodeId = `A${rel.from}`;
-            const toNodeId = `A${rel.to}`;
-            let edgeLabel = (rel.label || '').replace(/"/g, '').replace(/\n/g, ' '); // Sanitize
-            if (edgeLabel.length > 30) edgeLabel = edgeLabel.substring(0, 27) + "...";
-            mermaidLines.push(`    ${fromNodeId} -- "${edgeLabel}" --> ${toNodeId}`); // Edge label
-        });
+        
+        // Add safety check for relationships.details
+        if (relationships && relationships.details && Array.isArray(relationships.details)) {
+            relationships.details.forEach(rel => {
+                if (rel && typeof rel === 'object' && 'from' in rel && 'to' in rel) {
+                    const fromNodeId = `A${rel.from}`;
+                    const toNodeId = `A${rel.to}`;
+                    let edgeLabel = (rel.label || '').replace(/"/g, '').replace(/\n/g, ' '); // Sanitize
+                    if (edgeLabel.length > 30) edgeLabel = edgeLabel.substring(0, 27) + "...";
+                    mermaidLines.push(`    ${fromNodeId} -- "${edgeLabel}" --> ${toNodeId}`); // Edge label
+                }
+            });
+        } else {
+            console.warn("No relationship details available for mermaid diagram");
+        }
         const mermaidDiagram = mermaidLines.join('\n');
 
         // Generate index.md
