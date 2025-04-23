@@ -120,8 +120,8 @@ const TutorialForm: React.FC = () => {
   }, [downloadUrl]);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-white rounded-lg shadow-md max-w-2xl mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-4">Generate Codebase Tutorial</h2>
+    <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-gray-800 rounded-lg shadow-md max-w-2xl mx-auto border border-gray-700">
+      <h2 className="text-2xl font-semibold text-gray-200 mb-4">Generate Codebase Tutorial</h2>
 
       {/* Source Type Selection */}
       <div className="flex gap-4">
@@ -132,9 +132,9 @@ const TutorialForm: React.FC = () => {
             value="repo"
             checked={sourceType === 'repo'}
             onChange={() => setSourceType('repo')}
-            className="form-radio text-blue-600"
+            className="form-radio text-purple-500"
           />
-          <span>GitHub Repo URL</span>
+          <span className="text-gray-300">GitHub Repo URL</span>
         </label>
         <label className="flex items-center space-x-2 cursor-pointer">
           <input
@@ -143,16 +143,16 @@ const TutorialForm: React.FC = () => {
             value="upload"
             checked={sourceType === 'upload'}
             onChange={() => setSourceType('upload')}
-            className="form-radio text-blue-600"
+            className="form-radio text-purple-500"
           />
-          <span>Upload Local Directory (.zip)</span>
+          <span className="text-gray-300">Upload Local Directory (.zip)</span>
         </label>
       </div>
 
       {/* Conditional Inputs */}
       {sourceType === 'repo' && (
         <div>
-          <label htmlFor="repoUrl" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="repoUrl" className="block text-sm font-medium text-gray-300">
             GitHub Repository URL
           </label>
           <input
@@ -162,14 +162,14 @@ const TutorialForm: React.FC = () => {
             onChange={(e) => setRepoUrl(e.target.value)}
             placeholder="e.g., https://github.com/owner/repo/tree/main/src"
             required={sourceType === 'repo'}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-white sm:text-sm"
           />
         </div>
       )}
 
       {sourceType === 'upload' && (
         <div>
-          <label htmlFor="fileUpload" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="fileUpload" className="block text-sm font-medium text-gray-300">
             Upload Zip File
           </label>
           <input
@@ -179,15 +179,15 @@ const TutorialForm: React.FC = () => {
             onChange={handleFileChange}
             ref={fileInputRef}
             required={sourceType === 'upload'}
-            className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            className="mt-1 block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-700 file:text-purple-300 hover:file:bg-gray-600"
           />
-          {uploadedFile && <p className="text-xs text-gray-500 mt-1">Selected: {uploadedFile.name}</p>}
+          {uploadedFile && <p className="text-xs text-gray-400 mt-1">Selected: {uploadedFile.name}</p>}
         </div>
       )}
 
       {/* Optional Fields */}
        <div>
-          <label htmlFor="projectName" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="projectName" className="block text-sm font-medium text-gray-300">
             Project Name (Optional)
           </label>
           <input
@@ -196,13 +196,13 @@ const TutorialForm: React.FC = () => {
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
             placeholder="Defaults to repo/zip name"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-white sm:text-sm"
           />
        </div>
 
        {sourceType === 'repo' && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3">
-            <label htmlFor="githubToken" className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="bg-gray-700 border-l-4 border-purple-400 p-3">
+            <label htmlFor="githubToken" className="block text-sm font-medium text-gray-300 mb-1">
                 GitHub Token (Optional)
             </label>
             <input
@@ -211,21 +211,21 @@ const TutorialForm: React.FC = () => {
             value={githubToken}
             onChange={(e) => setGithubToken(e.target.value)}
             placeholder="Enter token for private repos or rate limits"
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-white sm:text-sm"
             />
-             <p className="text-xs text-yellow-700 mt-1">Needed for private repositories or to avoid API rate limits. Token is sent to the server but not stored long-term.</p>
+             <p className="text-xs text-gray-400 mt-1">Needed for private repositories or to avoid API rate limits. Token is sent to the server but not stored long-term.</p>
         </div>
        )}
 
         <div>
-            <label htmlFor="language" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="language" className="block text-sm font-medium text-gray-300">
                 Tutorial Language
             </label>
             <select
                 id="language"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-white sm:text-sm"
             >
                 <option value="english">English</option>
                 <option value="spanish">Spanish</option>
@@ -242,84 +242,82 @@ const TutorialForm: React.FC = () => {
         </div>
 
        {/* Advanced Options (Collapsible?) */}
-       <details className="group border border-gray-200 rounded-md p-3">
-            <summary className="text-sm font-medium text-gray-600 cursor-pointer group-open:mb-2">Advanced Options</summary>
+       <details className="group border border-gray-600 rounded-md p-3">
+            <summary className="text-sm font-medium text-gray-300 cursor-pointer group-open:mb-2">Advanced Options</summary>
             <div className="space-y-4">
                  <div>
-                    <label htmlFor="includePatterns" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="includePatterns" className="block text-sm font-medium text-gray-300">
                         Include Patterns (comma-separated)
                     </label>
-                    <textarea
+                    <input
+                        type="text"
                         id="includePatterns"
-                        rows={3}
                         value={includePatterns}
                         onChange={(e) => setIncludePatterns(e.target.value)}
-                        placeholder={DEFAULT_INCLUDE_PATTERNS.slice(0, 5).join(', ') + '...'}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-xs"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-white sm:text-sm"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Uses glob patterns. Defaults to common code/config files.</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                        File patterns to include in the analysis (e.g., *.js, src/*.ts)
+                    </p>
                 </div>
+
                 <div>
-                    <label htmlFor="excludePatterns" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="excludePatterns" className="block text-sm font-medium text-gray-300">
                         Exclude Patterns (comma-separated)
                     </label>
-                    <textarea
+                    <input
+                        type="text"
                         id="excludePatterns"
-                        rows={3}
                         value={excludePatterns}
                         onChange={(e) => setExcludePatterns(e.target.value)}
-                        placeholder={DEFAULT_EXCLUDE_PATTERNS.slice(0, 5).join(', ') + '...'}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono text-xs"
+                        className="mt-1 block w-full px-3 py-2 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-white sm:text-sm"
                     />
-                     <p className="text-xs text-gray-500 mt-1">Uses glob patterns. Defaults to common test/build/vendor dirs.</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                        File patterns to exclude from the analysis (e.g., node_modules/*, *.test.js)
+                    </p>
                 </div>
-                 <div>
-                    <label htmlFor="maxFileSize" className="block text-sm font-medium text-gray-700">
-                        Max File Size (Bytes)
+
+                <div>
+                    <label htmlFor="maxFileSize" className="block text-sm font-medium text-gray-300">
+                        Max File Size (KB)
                     </label>
                     <input
                         type="number"
                         id="maxFileSize"
                         value={maxFileSize}
-                        onChange={(e) => setMaxFileSize(e.target.value ? parseInt(e.target.value, 10) : '')}
-                        min="0"
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        onChange={(e) => setMaxFileSize(e.target.value)}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-white sm:text-sm"
                     />
-                     <p className="text-xs text-gray-500 mt-1">Skip files larger than this size. Default: {DEFAULT_MAX_FILE_SIZE} bytes (~100KB).</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                        Maximum file size to include in the analysis (in KB)
+                    </p>
                 </div>
             </div>
        </details>
 
-
-      {/* Submit Button & Feedback */}
-      <div className="pt-4">
-        {isLoading ? (
-          <LoadingSpinner />
+      {/* Action Buttons */}
+      <div className="mt-6 flex items-center justify-between space-x-4">
+        {downloadUrl && downloadFilename ? (
+          <a
+            href={downloadUrl}
+            download={downloadFilename}
+            className="inline-block w-full py-2 px-4 text-center text-white font-medium bg-green-600 hover:bg-green-700 rounded-md shadow transition-colors"
+          >
+            Download Tutorial
+          </a>
         ) : (
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="inline-block w-full py-2 px-4 text-white font-medium rounded-md shadow transition-colors bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Generate Tutorial
+            {isLoading ? <LoadingSpinner /> : 'Generate Tutorial'}
           </button>
         )}
       </div>
 
-      <ErrorMessage message={error || ''} />
-
-      {downloadUrl && downloadFilename && (
-        <div className="mt-4 p-4 bg-green-100 border border-green-400 rounded-md text-center">
-          <p className="text-green-800 font-semibold mb-2">Tutorial Ready!</p>
-          <a
-            href={downloadUrl}
-            download={downloadFilename}
-            className="inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-          >
-            Download {downloadFilename}
-          </a>
-        </div>
-      )}
+      {/* Error display */}
+      {error && <ErrorMessage message={error} />}
     </form>
   );
 };
