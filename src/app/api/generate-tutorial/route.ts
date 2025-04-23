@@ -26,7 +26,8 @@ async function callLlmWithRetry<T>(
     parser: (text: string) => T,
     validator: (parsed: T) => boolean | string, // Return true or error message string
     maxRetries = 3,
-    useCache = true
+    useCache = true,
+    contentType: 'yaml' | 'markdown' = 'yaml' // Add content type parameter with default 'yaml'
 ): Promise<{ success: boolean; data?: T; error?: string }> {
     let lastError: string = "Failed after multiple retries.";
     for (let i = 0; i < maxRetries; i++) {
@@ -44,12 +45,17 @@ async function callLlmWithRetry<T>(
             // Attempt parsing (extract YAML/JSON etc.)
             let parsedData: T;
             try {
-                 // Extract content within ```yaml ... ```
-                 const match = llmResult.text.match(/```yaml\s*([\s\S]*?)\s*```/);
-                 if (!match || !match[1]) {
-                     throw new Error("Could not find YAML block in LLM response.");
-                 }
-                 parsedData = parser(match[1]);
+                if (contentType === 'yaml') {
+                    // Extract content within ```yaml ... ```
+                    const match = llmResult.text.match(/```yaml\s*([\s\S]*?)\s*```/);
+                    if (!match || !match[1]) {
+                        throw new Error("Could not find YAML block in LLM response.");
+                    }
+                    parsedData = parser(match[1]);
+                } else {
+                    // For markdown content, use the entire response
+                    parsedData = parser(llmResult.text);
+                }
             } catch (parseError: any) {
                  lastError = `Failed to parse LLM response: ${parseError.message}. Response:\n${llmResult.text.substring(0,500)}...`;
                  console.error(`Parse attempt ${i + 1} failed: ${lastError}`);
@@ -422,7 +428,8 @@ export async function POST(request: NextRequest) {
                     return true;
                 },
                 3, // Retry chapter writing
-                false // Don't cache chapter writing prompts as context changes
+                false, // Don't cache chapter writing prompts as context changes
+                'markdown' // Use markdown content type
             );
 
 
