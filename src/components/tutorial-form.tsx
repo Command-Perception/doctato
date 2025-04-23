@@ -1,7 +1,7 @@
 // app/(components)/tutorial-form.tsx
 'use client'; // This component interacts with browser APIs (fetch, File)
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import LoadingSpinner from './loading-spinner';
 import ErrorMessage from './error-message';
 import { DEFAULT_INCLUDE_PATTERNS, DEFAULT_EXCLUDE_PATTERNS, DEFAULT_MAX_FILE_SIZE } from '@/lib/patterns'; // Import defaults
@@ -13,16 +13,22 @@ const TutorialForm: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [projectName, setProjectName] = useState('');
   const [githubToken, setGithubToken] = useState('');
-  const [includePatterns, setIncludePatterns] = useState(DEFAULT_INCLUDE_PATTERNS.join(', '));
-  const [excludePatterns, setExcludePatterns] = useState(DEFAULT_EXCLUDE_PATTERNS.join(', '));
-  const [maxFileSize, setMaxFileSize] = useState<number | string>(DEFAULT_MAX_FILE_SIZE);
+  const [includePatterns, setIncludePatterns] = useState('');
+  const [excludePatterns, setExcludePatterns] = useState('');
+  const [maxFileSize, setMaxFileSize] = useState<number | string>('');
   const [language, setLanguage] = useState('english');
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadFilename, setDownloadFilename] = useState<string | null>(null);
-
+  
+  // Safely initialize state values after component mounts to prevent hydration issues
+  useEffect(() => {
+    setIncludePatterns(DEFAULT_INCLUDE_PATTERNS.join(', '));
+    setExcludePatterns(DEFAULT_EXCLUDE_PATTERNS.join(', '));
+    setMaxFileSize(DEFAULT_MAX_FILE_SIZE);
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -70,15 +76,35 @@ const TutorialForm: React.FC = () => {
     if (maxFileSize) formData.append('maxFileSize', maxFileSize.toString());
     if (language) formData.append('language', language);
 
+    console.log("Submitting form...");
     try {
       const response = await fetch('/api/generate-tutorial', {
         method: 'POST',
         body: formData, // Send form data
       });
 
+      console.log("Response status:", response.status);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! Status: ${response.status}`);
+        // Handle non-OK responses more carefully
+        let errorMessage = `HTTP error! Status: ${response.status}`;
+        try {
+          // Try to parse as JSON, but have fallback if it's not valid JSON
+          const contentType = response.headers.get('content-type');
+          console.log("Content-Type:", contentType);
+          
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } else {
+            // Not JSON, just get text
+            const errorText = await response.text();
+            console.error("Non-JSON error response:", errorText.substring(0, 500));
+          }
+        } catch (parseError) {
+          console.error("Error parsing error response:", parseError);
+        }
+        throw new Error(errorMessage);
       }
 
       // Handle successful response (ZIP file)
@@ -231,7 +257,7 @@ const TutorialForm: React.FC = () => {
             placeholder="Enter token for private repos or rate limits"
             className="mt-1 block w-full px-3 py-2 border border-gray-600 bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-white sm:text-sm"
             />
-             <p className="text-xs text-gray-400 mt-1">Needed for private repositories or to avoid API rate limits. Token is sent to the server but not stored long-term.</p>
+             <p className="text-xs text-gray-300 mt-1">Needed for private repositories or to avoid API rate limits. Token is sent to the server but not stored long-term.</p>
         </div>
        )}
 

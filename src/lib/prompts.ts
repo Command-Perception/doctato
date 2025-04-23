@@ -70,7 +70,7 @@ export function getAnalyzeRelationshipsPrompt(
    return `
 Based on the following abstractions and relevant code snippets from the project \`${projectName}\`:
 
-List of Abstraction Indices and Names${list_lang_note}:
+List of Abstraction Indices and Names${listLangNote}:
 ${abstractionListing}
 
 Context (Abstractions, Descriptions, Code):
