@@ -123,31 +123,49 @@ const TutorialForm: React.FC = () => {
     <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-gray-800 rounded-lg shadow-md max-w-2xl mx-auto border border-gray-700">
       <h2 className="text-2xl font-semibold text-gray-200 mb-4">Generate Codebase Tutorial</h2>
 
-      {/* Source Type Selection */}
-      <div className="flex gap-4">
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            type="radio"
-            name="sourceType"
-            value="repo"
-            checked={sourceType === 'repo'}
-            onChange={() => setSourceType('repo')}
-            className="form-radio text-purple-500"
-          />
-          <span className="text-gray-300">GitHub Repo URL</span>
-        </label>
-        <label className="flex items-center space-x-2 cursor-pointer">
-          <input
-            type="radio"
-            name="sourceType"
-            value="upload"
-            checked={sourceType === 'upload'}
-            onChange={() => setSourceType('upload')}
-            className="form-radio text-purple-500"
-          />
-          <span className="text-gray-300">Upload Local Directory (.zip)</span>
-        </label>
+      {/* Source Type Selection - Button Style */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setSourceType('repo')}
+          className={`flex-1 py-2 px-3 rounded-md transition-all duration-200 text-sm font-medium border-2 ${
+            sourceType === 'repo'
+              ? 'bg-purple-900/30 border-purple-500 text-white shadow-[0_0_8px_0_rgba(168,85,247,0.6)]'
+              : 'border-purple-500/40 text-gray-300 hover:border-purple-400 hover:bg-purple-900/10'
+          }`}
+        >
+          GitHub Repo URL
+        </button>
+        <button
+          type="button"
+          onClick={() => setSourceType('upload')}
+          className={`flex-1 py-2 px-3 rounded-md transition-all duration-200 text-sm font-medium border-2 ${
+            sourceType === 'upload'
+              ? 'bg-purple-900/30 border-purple-500 text-white shadow-[0_0_8px_0_rgba(168,85,247,0.6)]'
+              : 'border-purple-500/40 text-gray-300 hover:border-purple-400 hover:bg-purple-900/10'
+          }`}
+        >
+          Upload Local Directory (.zip)
+        </button>
       </div>
+
+      {/* Hidden radio inputs for form submission */}
+      <input 
+        type="radio" 
+        name="sourceType" 
+        value="repo" 
+        checked={sourceType === 'repo'} 
+        onChange={() => {}} 
+        className="hidden" 
+      />
+      <input 
+        type="radio" 
+        name="sourceType" 
+        value="upload" 
+        checked={sourceType === 'upload'} 
+        onChange={() => {}} 
+        className="hidden" 
+      />
 
       {/* Conditional Inputs */}
       {sourceType === 'repo' && (

@@ -6,7 +6,7 @@ export default function Home() {
     <main className="flex min-h-full flex-col items-center justify-start p-6 sm:p-12 md:p-24 bg-gradient-to-br from-gray-900 to-gray-800 dark:text-white">
        <div className="w-full max-w-4xl">
             <div className="text-center mb-8">
-                <h1 className="text-5xl sm:text-5xl font-bold bg-gradient-to-r mb-5  from-purple-400 to-blue-500 bg-clip-text text-transparent animate-gradient">doctato.</h1>
+                <h1 className="text-5xl sm:text-5xl font-bold bg-gradient-to-r mb-5  from-purple-500 to-blue-500 bg-clip-text text-transparent animate-gradient">doctato.</h1>
                  <h2 className="text-xl sm:text-2xl font-bold text-gray-300">AI Codebase Tutorial Generator</h2>
                  <p className="mt-2 text-sm sm:text-base text-gray-500">
                      Enter a GitHub repository URL or upload a local project zip to generate a beginner-friendly tutorial.

@@ -6,7 +6,7 @@ import "./globals.css"; // Ensure Tailwind CSS is imported
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AI Codebase Tutorial Generator",
+  title: "doctato - AI Codebase Tutorial Generator",
   description: "Generate tutorials from codebases using AI",
 };
 
