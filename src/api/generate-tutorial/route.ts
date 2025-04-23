@@ -12,7 +12,7 @@ import {
     getIdentifyAbstractionsPrompt, getAnalyzeRelationshipsPrompt,
     getOrderChaptersPrompt, getWriteChapterPrompt
 } from '@/lib/prompts';
-import { getContentForIndices, sanitizeFilename } from '@/lib/utils';
+import { getContentForIndices, sanitizeFilename, ensureAllAbstractionsInRelationships } from '@/lib/utils';
 import YAML from 'yaml';
 import JSZip from 'jszip';
 
@@ -348,7 +348,10 @@ export async function POST(request: NextRequest) {
                     // Check if all abstractions are mentioned
                     if (mentionedIndices.size !== abstractions.length) {
                         const missing = abstractions.map((_, i) => i).filter(i => !mentionedIndices.has(i));
-                        return `Validation Error: Not all abstractions are included in relationships. Missing: ${missing.join(', ')}. Please ensure every abstraction index appears at least once.`;
+                        console.warn(`Relationships validation: Not all abstractions included. Missing: ${missing.join(', ')}. Will add fallback relationships.`);
+                        
+                        // We'll validate it now but fix it after receiving the data
+                        return true;
                     }
                     return true;
                 }
@@ -357,7 +360,11 @@ export async function POST(request: NextRequest) {
             if (!relationshipsResult.success || !relationshipsResult.data) {
                 return NextResponse.json({ success: false, error: `Failed to analyze relationships: ${relationshipsResult.error}` }, { status: 500 });
             }
-            const relationships: RelationshipData = relationshipsResult.data;
+            let relationships: RelationshipData = relationshipsResult.data;
+
+            // Ensure all abstractions are included in relationships
+            relationships = ensureAllAbstractionsInRelationships(relationships, abstractions);
+
             console.log("Analyzed relationships.");
 
             // --- 4. Order Chapters ---
